@@ -32,7 +32,6 @@ driver = uc.Chrome(use_subprocess=False, options=options)
 
 for keyword_doc in keywords:
     keyword = keyword_doc["keyword"]
-    print(f"🔍 Đang tìm quảng cáo cho từ khoá: {keyword}")
 
     try:
         driver.get("https://www.google.com")
@@ -41,7 +40,7 @@ for keyword_doc in keywords:
         search_box.send_keys(keyword)
         search_box.send_keys(Keys.RETURN)
 
-        time.sleep(2)  # đợi Google load kết quả
+        time.sleep(2)
 
         ad_blocks = driver.find_elements(By.CSS_SELECTOR, "div[data-text-ad]")
         ads_data = []
