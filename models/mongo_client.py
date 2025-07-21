@@ -2,7 +2,7 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path="/home/nghia/WebstormProjects/semcheckerads/.env")
+load_dotenv()
 
 def get_mongo_client():
     mongo_uri = os.getenv("MONGO_URI")
