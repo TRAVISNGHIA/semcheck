@@ -137,7 +137,7 @@ export default function KeywordManager() {
             <button
               onClick={handleCrawl}
               disabled={loading}
-              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+              className="bg-black text-white px-6 py-2 rounded hover:bg-green-700"
             >
               {loading ? 'Đang crawl...' : 'Tra cứu từ khoá'}
             </button>
