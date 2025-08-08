@@ -25,6 +25,12 @@ class UpdateProfileRequest(BaseModel):
 class DeleteProfileRequest(BaseModel):
     profile_id: str
 
+@router.get("/")
+def get_profiles():
+    profiles = list(profile_collection.find())
+    for p in profiles:
+        p["_id"] = str(p["_id"])
+    return profiles
 
 @router.post("/create")
 def create_profile(data: ProfileRequest):
@@ -32,7 +38,7 @@ def create_profile(data: ProfileRequest):
         raise HTTPException(status_code=409, detail="Profile đã tồn tại")
 
     profile_collection.insert_one(data.dict())
-    return {"message": "Đã thêm profile thành công", "name": data.name}
+    return {"message": "Đã thêm profiles thành công", "name": data.name}
 
 
 @router.put("/update")
@@ -45,7 +51,7 @@ def update_profile(data: UpdateProfileRequest):
             # check duplicate name
             existing = profile_collection.find_one({"name": new_data["name"]})
             if existing and str(existing["_id"]) != profile_id:
-                raise HTTPException(status_code=409, detail="Tên profile đã tồn tại")
+                raise HTTPException(status_code=409, detail="Tên profiles đã tồn tại")
 
         result = profile_collection.update_one(
             {"_id": ObjectId(profile_id)},
@@ -55,7 +61,7 @@ def update_profile(data: UpdateProfileRequest):
         if result.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy hoặc không có gì thay đổi")
 
-        return {"message": "Cập nhật profile thành công"}
+        return {"message": "Cập nhật profiles thành công"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -66,8 +72,8 @@ def delete_profile(profile_id: str = Query(...)):
     try:
         result = profile_collection.delete_one({"_id": ObjectId(profile_id)})
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy profile")
-        return {"message": "Xoá profile thành công"}
+            raise HTTPException(status_code=404, detail="Không tìm thấy profiles")
+        return {"message": "Xoá profiles thành công"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

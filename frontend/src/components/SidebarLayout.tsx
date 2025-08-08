@@ -1,4 +1,3 @@
-// components/SidebarLayout.tsx
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
@@ -9,13 +8,13 @@ export default function SidebarLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
   const handleLogout = () => {
-    localStorage.removeItem('token') // hoặc sessionStorage tùy bạn lưu kiểu gì
-    router.push('/') // quay về trang login
+    localStorage.removeItem('token')
+    localStorage.removeItem('username')
+    router.push('/')
   }
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 hidden sm:flex flex-col justify-between">
         <div className="p-4">
           <div className="text-lg font-bold text-gray-900 dark:text-white mb-4">Trang chủ</div>
@@ -44,10 +43,22 @@ export default function SidebarLayout({ children }: { children: ReactNode }) {
                 Lịch sử tra cứu
               </button>
             </li>
+            {/* Tab quản lý profile luôn hiển thị */}
+            <li>
+              <button
+                  onClick={() => router.push('/profiles')}
+                  className={`w-full text-left px-4 py-2 rounded-lg font-medium ${
+                      pathname === '/profiles'
+                  ? 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                  }`}
+              >
+                Quản lý profile
+              </button>
+            </li>
           </ul>
         </div>
 
-        {/* Logout Button */}
         <div className="p-4">
           <button
             onClick={handleLogout}
@@ -58,7 +69,6 @@ export default function SidebarLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Content */}
       <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
         {children}
       </main>

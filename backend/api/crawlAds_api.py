@@ -48,7 +48,7 @@ def upload_to_r2(local_path, remote_path):
         print(f"Upload thất bại: {e}")
         return False
 
-# Chọn random 1 profile hợp lệ (có thư mục + user_agent)
+# Chọn random 1 profiles hợp lệ (có thư mục + user_agent)
 def choose_valid_random_profile():
     profiles = get_all_profiles()
     valid_profiles = []
@@ -67,31 +67,31 @@ def crawl_ads():
     if not keywords:
         return JSONResponse(content={"error": "Không có keyword nào"}, status_code=400)
 
-    # Chọn 1 profile để crawl
+    # Chọn 1 profiles để crawl
     profile = choose_valid_random_profile()
     if not profile:
-        return JSONResponse(content={"error": "Không tìm được profile hợp lệ"}, status_code=400)
+        return JSONResponse(content={"error": "Không tìm được profiles hợp lệ"}, status_code=400)
 
     profile_name = profile["name"].strip()
-    print(f"Đang dùng profile: {profile_name}")
+    print(f"Đang dùng profiles: {profile_name}")
 
-    # Clone profile gốc sang thư mục mới để tránh xung đột khi chạy UC browser
+    # Clone profiles gốc sang thư mục mới để tránh xung đột khi chạy UC browser
     base_profile_path = f"{BASE_PROFILE_PATH}/{profile_name}"
     clone_folder = f"{profile_name.replace(' ', '_')}_clone_"
     working_profile_path = f"{WORKING_PROFILE_PATH}/{clone_folder}"
 
-    # Bỏ qua file Singleton để tránh lỗi khi copy profile
+    # Bỏ qua file Singleton để tránh lỗi khi copy profiles
     def ignore_singleton_files(_, files):
         return [f for f in files if f.startswith("Singleton")]
 
-    # Nếu profile clone chưa tồn tại thì clone
+    # Nếu profiles clone chưa tồn tại thì clone
     if not os.path.exists(working_profile_path):
         try:
             shutil.copytree(base_profile_path, working_profile_path, ignore=ignore_singleton_files)
         except Exception as e:
-            return JSONResponse(content={"error": f"Lỗi clone profile: {e}"}, status_code=500)
+            return JSONResponse(content={"error": f"Lỗi clone profiles: {e}"}, status_code=500)
 
-    # Cập nhật lại thông tin thư mục profile clone
+    # Cập nhật lại thông tin thư mục profiles clone
     profile["user_data_dir"] = "/home/nghia/.config/google-chrome-uc/"
     profile["profile_directory"] = clone_folder
 
@@ -111,7 +111,7 @@ def crawl_ads():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument(f"--user-data-dir={profile['user_data_dir']}")
-    options.add_argument(f"--profile-directory={profile['profile_directory']}")
+    options.add_argument(f"--profiles-directory={profile['profile_directory']}")
     options.add_argument(f"--user-agent={profile['user_agent']}")
 
     # Mở trình duyệt

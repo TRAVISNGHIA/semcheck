@@ -7,7 +7,7 @@ from backend.models.mongo_client import get_mongo_client
 from backend.api.ads_api import router as ads_router
 from dotenv import load_dotenv
 from backend.api.user_api import router as user_router
-
+from backend.api.profile_api import router as profile_router
 load_dotenv()
 
 app = FastAPI()
@@ -85,3 +85,5 @@ def trigger_crawl():
 
 app.include_router(ads_router, prefix="/api")
 app.include_router(user_router, prefix="/api/user")
+app.include_router(profile_router, prefix="/api/profiles")
+
