@@ -17,12 +17,13 @@ export default function CrawlHistory() {
   const [showModal, setShowModal] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
   // Fetch dữ liệu khi load trang
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/ads')
+        const res = await fetch(`${API_BASE_URL}/api/ads`)
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
 
         const data = await res.json()
@@ -81,12 +82,29 @@ export default function CrawlHistory() {
   }
 
   // Các trường filter
-  const fields = [
-    { name: 'profile_name', placeholder: 'Profile a, Profile b,...' },
-    { name: 'keyword', placeholder: 'keyword a, keyword b,...' },
-    { name: 'link', placeholder: 'https://example.com...' },
-    { name: 'timestamp', placeholder: 'yyyy/mm/dd hh:mm:ss' },
-  ]
+const fields = [
+  {
+    name: 'profile_name',
+    placeholder: 'Profile a, Profile b,...',
+    title: 'Profile Name',
+  },
+  {
+    name: 'keyword',
+    placeholder: 'keyword a, keyword b,...',
+    title: 'Keyword',
+  },
+  {
+    name: 'link',
+    placeholder: 'https://example.com...',
+    title: 'Link',
+  },
+  {
+    name: 'timestamp',
+    placeholder: 'yyyy/mm/dd hh:mm:ss',
+    title: 'Timestamp',
+  },
+]
+
 
   return (
    <SidebarLayout>
@@ -101,15 +119,23 @@ export default function CrawlHistory() {
           {/* Ô filter */}
           <div className="p-4 flex flex-col md:flex-row justify-between gap-4">
             {fields.map((f) => (
-              <input
-                key={f.name}
-                type="text"
-                name={f.name}
-                value={(filter as any)[f.name]}
-                onChange={handleChange}
-                placeholder={f.placeholder}
-                className="p-2 border rounded w-full md:w-1/5"
-              />
+              <div key={f.name} className="flex flex-col w-full md:w-1/5">
+                <label
+                   htmlFor={f.name}
+                   className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                   {f.title}
+                </label>
+                  <input
+                    id={f.name}
+                    type="text"
+                    name={f.name}
+                    value={(filter as any)[f.name]}
+                    onChange={handleChange}
+                    placeholder={f.placeholder}
+                    className="p-2 border rounded"
+                  />
+              </div>
             ))}
           </div>
 

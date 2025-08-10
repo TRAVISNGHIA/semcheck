@@ -14,15 +14,17 @@ export default function KeywordManager() {
     fetchKeywords()
   }, [])
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+
   const fetchKeywords = async () => {
-    const res = await fetch('http://localhost:8000/api/keywords')
+    const res = await fetch(`${API_BASE_URL}/api/keywords`)
     const data = await res.json()
     setKeywords(data)
   }
 
   const addKeyword = async () => {
     if (!newKeyword.trim()) return
-    await fetch('http://localhost:8000/api/keywords', {
+    await fetch(`${API_BASE_URL}/api/keywords`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ keyword: newKeyword }),
@@ -32,7 +34,7 @@ export default function KeywordManager() {
   }
 
   const deleteKeyword = async (id: string) => {
-    await fetch(`http://localhost:8000/api/keywords/${id}`, { method: 'DELETE' })
+    await fetch(`${API_BASE_URL}/api/keywords/${id}`, { method: 'DELETE' })
     fetchKeywords()
   }
 
@@ -44,7 +46,7 @@ export default function KeywordManager() {
 
   const updateKeyword = async () => {
     if (!editedKeyword.trim() || !editingId) return
-    await fetch(`http://localhost:8000/api/keywords/${editingId}`, {
+    await fetch(`${API_BASE_URL}/api/keywords/${editingId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ keyword: editedKeyword }),
@@ -57,7 +59,7 @@ export default function KeywordManager() {
 
   const handleCrawl = async () => {
     setLoading(true)
-    await fetch('http://localhost:8000/api/crawl', { method: 'POST' })
+    await fetch(`${API_BASE_URL}/api/crawl`, { method: 'POST' })
     setLoading(false)
     alert('Crawl xong rồi!')
   }

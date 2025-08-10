@@ -8,6 +8,8 @@ export default function ProfileManager() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editedProfile, setEditedProfile] = useState<any>(null)
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+
   // Modal thêm profile
   const [showAddModal, setShowAddModal] = useState(false)
   const [newProfile, setNewProfile] = useState({
@@ -22,13 +24,13 @@ export default function ProfileManager() {
   }, [])
 
   const fetchProfiles = async () => {
-    const res = await fetch('http://localhost:8000/api/profiles')
+    const res = await fetch(`${API_BASE_URL}/api/profiles`)
     const data = await res.json()
     setProfiles(data)
   }
 
   const deleteProfile = async (id: string) => {
-    await fetch(`http://localhost:8000/api/profiles/delete?profile_id=${id}`, { method: 'DELETE' })
+    await fetch(`${API_BASE_URL}/api/profiles/delete?profile_id=${id}`, { method: 'DELETE' })
     fetchProfiles()
   }
 
@@ -40,7 +42,7 @@ export default function ProfileManager() {
 
   const updateProfile = async () => {
     if (!editingId) return
-    await fetch(`http://localhost:8000/api/profiles/update`, {
+    await fetch(`${API_BASE_URL}/api/profiles/update`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -59,7 +61,7 @@ export default function ProfileManager() {
       alert('Name không được để trống')
       return
     }
-    await fetch('http://localhost:8000/api/profiles/create', {
+    await fetch(`${API_BASE_URL}/api/profiles/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newProfile),
