@@ -1,5 +1,5 @@
 import KeywordManager from '@/components/KeywordManager'
 
-export default function KeywordPage() {
+export default function HomePage() {
   return <KeywordManager />
 }

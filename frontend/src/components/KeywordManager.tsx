@@ -17,7 +17,7 @@ export default function KeywordManager() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
   const fetchKeywords = async () => {
-    const res = await fetch(`${API_BASE_URL}/api/keywords`)
+    const res = await fetch(`http://localhost:8000/api/keywords`)
     const data = await res.json()
     setKeywords(data)
   }
@@ -61,7 +61,7 @@ export default function KeywordManager() {
     setLoading(true)
     await fetch(`${API_BASE_URL}/api/crawl`, { method: 'POST' })
     setLoading(false)
-    alert('Crawl xong rồi!')
+    alert('Tra cứu đã xong')
   }
 
   return (
@@ -148,7 +148,7 @@ export default function KeywordManager() {
 
       {/* Modal sửa keyword */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 fle    x justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
             <h3 className="text-lg font-bold mb-4 text-blue-700">Sửa từ khoá</h3>
             <input
