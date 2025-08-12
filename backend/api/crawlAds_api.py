@@ -110,10 +110,14 @@ def crawl_ads():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument(f"--user-data-dir={profile['user_data_dir']}")
-    options.add_argument(f"--profiles-directory={profile['profile_directory']}")
-    options.add_argument(f"--user-agent={profile['user_agent']}")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--start-maximized")
 
+    # Load profile
+    options.add_argument(f"--user-data-dir={profile['user_data_dir']}")
+    options.add_argument(f"--profile-directory={profile['profile_directory']}")
+    options.add_argument(f"--user-agent={profile['user_agent']}")
     # Mở trình duyệt
     driver = uc.Chrome(version_main=138, options=options)
     total_ads = 0

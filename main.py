@@ -86,4 +86,3 @@ def trigger_crawl():
 app.include_router(ads_router, prefix="/api")
 app.include_router(user_router, prefix="/api/user")
 app.include_router(profile_router, prefix="/api/profiles")
-
