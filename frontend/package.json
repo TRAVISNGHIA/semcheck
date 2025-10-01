@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "start:backend": "cd .. && uvicorn main:app --reload",
+    "start:backend": "cd .. && uvicorn main:app --host 0.0.0.0 --port 8000",
     "start:frontend": "npm run dev",
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "lint": "next lint"
@@ -17,6 +17,7 @@
     "lucide-react": "^0.536.0",
     "next": "15.4.4",
     "react": "19.1.0",
+    "react-datepicker": "^8.7.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.3.1"
   },

@@ -24,7 +24,7 @@ export default function ProfileManager() {
   }, [])
 
   const fetchProfiles = async () => {
-    const res = await fetch(`${API_BASE_URL}/api/profiles`)
+    const res = await fetch(`${API_BASE_URL}/api/profiles/`)
     const data = await res.json()
     setProfiles(data)
   }
@@ -41,20 +41,24 @@ export default function ProfileManager() {
   }
 
   const updateProfile = async () => {
-    if (!editingId) return
-    await fetch(`${API_BASE_URL}/api/profiles/update`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        profile_id: editingId,
-        updated_data: editedProfile
-      }),
-    })
-    setShowModal(false)
-    setEditingId(null)
-    setEditedProfile(null)
-    fetchProfiles()
-  }
+  if (!editingId) return
+
+  const { _id, ...safeData } = editedProfile
+
+  await fetch(`${API_BASE_URL}/api/profiles/update`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      profile_id: editingId,
+      updated_data: safeData
+    }),
+  })
+
+  setShowModal(false)
+  setEditingId(null)
+  setEditedProfile(null)
+  fetchProfiles()
+}
 
   const createProfile = async () => {
     if (!newProfile.name.trim()) {
@@ -96,8 +100,7 @@ export default function ProfileManager() {
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">User Data Dir</th>
                   <th className="px-4 py-3">Profile Dir</th>
-                  <th className="px-4 py-3">User Agent</th>
-                  <th className="px-4 py-3 text-center">Hành động</th>
+                  <th className="px-4 py-3 text-center w-[140px] whitespace-nowrap">Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,22 +112,21 @@ export default function ProfileManager() {
                   </tr>
                 ) : (
                   profiles.map((p, index) => (
-                    <tr key={p._id} className="border-b dark:border-gray-700">
+                    <tr key={p._id} className="border-b dark:border-gray-700 text-black">
                       <td className="px-4 py-2">{index + 1}</td>
                       <td className="px-4 py-2">{p.name}</td>
                       <td className="px-4 py-2">{p.user_data_dir}</td>
                       <td className="px-4 py-2">{p.profile_directory}</td>
-                      <td className="px-4 py-2">{p.user_agent}</td>
-                      <td className="px-4 py-2 text-center space-x-4">
+                      <td className="px-4 py-2 text-center space-x-2 w-[140px] whitespace-nowrap">
                         <button
                           onClick={() => openEditModal(p)}
-                          className="text-blue-600 hover:underline"
+                          className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-blue-700 transition"
                         >
                           Sửa
                         </button>
                         <button
                           onClick={() => deleteProfile(p._id)}
-                          className="text-red-600 hover:underline"
+                          className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-red-700 transition"
                         >
                           Xoá
                         </button>
@@ -156,11 +158,6 @@ export default function ProfileManager() {
                 <input
                   value={editedProfile.profile_directory}
                   onChange={(e) => setEditedProfile({ ...editedProfile, profile_directory: e.target.value })}
-                  className="border px-3 py-2 rounded"
-                />
-                <input
-                  value={editedProfile.user_agent}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, user_agent: e.target.value })}
                   className="border px-3 py-2 rounded"
                 />
               </div>
@@ -204,12 +201,6 @@ export default function ProfileManager() {
                   placeholder="Profile Directory"
                   value={newProfile.profile_directory}
                   onChange={(e) => setNewProfile({ ...newProfile, profile_directory: e.target.value })}
-                  className="border px-3 py-2 rounded"
-                />
-                <input
-                  placeholder="User Agent"
-                  value={newProfile.user_agent}
-                  onChange={(e) => setNewProfile({ ...newProfile, user_agent: e.target.value })}
                   className="border px-3 py-2 rounded"
                 />
               </div>

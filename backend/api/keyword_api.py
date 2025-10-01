@@ -18,6 +18,13 @@ class UpdateKeywordRequest(BaseModel):
 class DeleteKeywordRequest(BaseModel):
     keyword_id: str
 
+@router.get("/")
+def list_keywords():
+    keywords = list(keyword_collection.find({}, {"_id": 1, "keyword": 1}))
+    for kw in keywords:
+        kw["_id"] = str(kw["_id"])
+    return keywords
+
 @router.post("/create")
 def create_keyword(data: KeywordRequest):
     keyword = data.keyword.strip()
@@ -29,7 +36,6 @@ def create_keyword(data: KeywordRequest):
 
     keyword_collection.insert_one({"keyword": keyword})
     return {"message": "Thêm từ khoá thành công", "keyword": keyword}
-
 
 @router.put("/update")
 def update_keyword(data: UpdateKeywordRequest):
@@ -52,7 +58,6 @@ def update_keyword(data: UpdateKeywordRequest):
 
     return {"message": "Đã cập nhật từ khoá thành công", "new_keyword": new_keyword}
 
-
 @router.post("/delete")
 def delete_keyword(data: DeleteKeywordRequest):
     keyword_id = data.keyword_id
@@ -62,4 +67,3 @@ def delete_keyword(data: DeleteKeywordRequest):
         raise HTTPException(status_code=404, detail="Không tìm thấy từ khoá")
 
     return {"message": "Đã xoá từ khoá thành công"}
-

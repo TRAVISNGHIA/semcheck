@@ -13,7 +13,7 @@ ads_collection = db["ads"]
 class DeleteAdRequest(BaseModel):
     ad_id: str
 
-@router.get("/ads")
+@router.get("/")
 def get_all_ads():
     ads = list(ads_collection.find())
     result = []
@@ -30,7 +30,7 @@ def get_all_ads():
         })
     return result
 
-@router.delete("/ads/delete")
+@router.delete("/delete")
 def delete_ad(data: DeleteAdRequest):
     ad = ads_collection.find_one({"_id": ObjectId(data.ad_id)})
     if not ad:

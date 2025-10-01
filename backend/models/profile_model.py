@@ -16,7 +16,6 @@ def save_profile_to_db(profile_name, user_data_dir, profile_directory, user_agen
         "profile_name": profile_name,
         "user_data_dir": user_data_dir,
         "profile_directory": profile_directory,
-        "user_agent": user_agent,
         "viewport": viewport,
         "created_at": datetime.now()
     })

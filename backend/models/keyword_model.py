@@ -9,7 +9,7 @@ def serialize_keyword(doc):
     return {
         "_id": str(doc["_id"]),
         "keyword": doc.get("keyword", ""),
-        "active": doc.get("active", True)  # mặc định True nếu chưa có
+        "active": doc.get("active", True)
     }
 
 def get_all_keywords():
