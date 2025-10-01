@@ -213,7 +213,7 @@ def crawl_ads():
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--headless-new")
+    # options.add_argument("--headless-new")
 
     driver = uc.Chrome(
         version_main=120,
