@@ -10,7 +10,6 @@ export default function ProfileManager() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
-  // Modal thêm profile
   const [showAddModal, setShowAddModal] = useState(false)
   const [newProfile, setNewProfile] = useState({
     name: '',
@@ -18,6 +17,9 @@ export default function ProfileManager() {
     profile_directory: '',
     user_agent: '',
   })
+
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetchProfiles()
@@ -41,24 +43,23 @@ export default function ProfileManager() {
   }
 
   const updateProfile = async () => {
-  if (!editingId) return
+    if (!editingId) return
+    const { _id, ...safeData } = editedProfile
 
-  const { _id, ...safeData } = editedProfile
+    await fetch(`${API_BASE_URL}/api/profiles/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profile_id: editingId,
+        updated_data: safeData
+      }),
+    })
 
-  await fetch(`${API_BASE_URL}/api/profiles/update`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      profile_id: editingId,
-      updated_data: safeData
-    }),
-  })
-
-  setShowModal(false)
-  setEditingId(null)
-  setEditedProfile(null)
-  fetchProfiles()
-}
+    setShowModal(false)
+    setEditingId(null)
+    setEditedProfile(null)
+    fetchProfiles()
+  }
 
   const createProfile = async () => {
     if (!newProfile.name.trim()) {
@@ -75,21 +76,44 @@ export default function ProfileManager() {
     fetchProfiles()
   }
 
+  const filteredProfiles = profiles.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    setSearchQuery(searchTerm.trim())
+  }
+
   return (
     <SidebarLayout>
       <section className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
         <div className="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-
-          {/* Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-bold text-black dark:text-white">Quản lý Profiles</h2>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-black text-white rounded hover:bg-green-700"
-            >
-              Thêm Profile
-            </button>
           </div>
+
+          {/* Search form */}
+          <form
+            onSubmit={handleSearch}
+            className="w-full p-4 border-b border-gray-200 dark:border-gray-700"
+          >
+            <div className="flex gap-2 w-full">
+              <input
+                type="text"
+                placeholder="Nhập tên profile..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border px-3 py-2 rounded flex-1"
+              />
+              <button
+                type="submit"
+                className="px-6 py-2 bg-black text-white rounded hover:bg-blue-700"
+              >
+                Tìm kiếm
+              </button>
+            </div>
+          </form>
 
           {/* Table profiles */}
           <div className="overflow-x-auto">
@@ -104,14 +128,14 @@ export default function ProfileManager() {
                 </tr>
               </thead>
               <tbody>
-                {profiles.length === 0 ? (
+                {filteredProfiles.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-2 text-center text-gray-500">
                       Không có profile nào
                     </td>
                   </tr>
                 ) : (
-                  profiles.map((p, index) => (
+                  filteredProfiles.map((p, index) => (
                     <tr key={p._id} className="border-b dark:border-gray-700 text-black">
                       <td className="px-4 py-2">{index + 1}</td>
                       <td className="px-4 py-2">{p.name}</td>
@@ -136,6 +160,15 @@ export default function ProfileManager() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 bg-black text-white rounded hover:bg-green-700"
+            >
+              Thêm Profile
+            </button>
           </div>
         </div>
 

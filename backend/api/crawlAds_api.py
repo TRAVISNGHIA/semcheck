@@ -31,6 +31,7 @@ R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
 R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL")
 PATH_PROFILE = os.getenv("PATH_PROFILE")
 PATH_PROFILE_CLONE = os.getenv("PATH_PROFILE_CLONE")
+API_PROXY_URL = os.getenv("API_PROXY_URL")
 
 UA_MOBILE_FILE = os.getenv("USER_AGENT_MOBILE_FILE")
 UA_TABLET_FILE = os.getenv("USER_AGENT_TABLET_FILE")
@@ -114,7 +115,7 @@ def choose_next_profile():
 
 
 def get_proxy_from_api():
-    url = "https://proxyxoay.org/api/get.php?key=lSeCeKkclVOnfRgUHhHHlP&time=300&nhamang=random&tinhthanh=0"
+    url = API_PROXY_URL
     try:
         resp = requests.get(url, timeout=10)
         text = resp.text.strip()
@@ -213,7 +214,7 @@ def crawl_ads():
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    # options.add_argument("--headless-new")
+    options.add_argument("--headless-new")
 
     driver = uc.Chrome(
         version_main=120,
@@ -224,7 +225,6 @@ def crawl_ads():
 
     driver.set_window_size(*window)
 
-    # set navigator.language
     lang = profile.get("accept_language", "vi-VN")
     if "-" not in lang and len(lang) >= 2:
         lang = lang + "-" + lang.upper()
