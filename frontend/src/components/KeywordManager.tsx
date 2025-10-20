@@ -4,6 +4,7 @@ import SidebarLayout from './SidebarLayout'
 
 export default function KeywordManager() {
   const [keywords, setKeywords] = useState<any[]>([])
+  const [filteredKeywords, setFilteredKeywords] = useState<any[]>([])
   const [newKeyword, setNewKeyword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
@@ -14,9 +15,19 @@ export default function KeywordManager() {
   const [interval, setInterval] = useState(5)
   const [unit, setUnit] = useState<'seconds' | 'minutes' | 'hours'>('minutes')
   const [saving, setSaving] = useState(false)
-    const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [selectAll, setSelectAll] = useState(false)
+
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(filteredKeywords.map((kw) => kw._id))
+    }
+    setSelectAll(!selectAll)
+  }
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
@@ -33,6 +44,7 @@ export default function KeywordManager() {
       _id: kw._id.$oid || kw._id,
     }))
     setKeywords(mapped)
+    setFilteredKeywords(mapped)
     setSelectedIds([])
   }
 
@@ -46,13 +58,23 @@ export default function KeywordManager() {
       console.error('Lỗi khi load config scheduler:', error)
     }
   }
+  const removeVietnameseTones = (str: string) => {
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+  }
+
   const handleSearch = () => {
     if (!searchTerm.trim()) {
       setFilteredKeywords(keywords)
     } else {
-      const filtered = keywords.filter((kw) =>
-        kw.keyword.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      const query = removeVietnameseTones(searchTerm.toLowerCase())
+      const filtered = keywords.filter((kw) => {
+        const plainKeyword = removeVietnameseTones(kw.keyword.toLowerCase())
+        return plainKeyword.includes(query)
+      })
       setFilteredKeywords(filtered)
       setPage(1)
     }
@@ -162,8 +184,8 @@ export default function KeywordManager() {
     }
   }
 
-  const totalPages = Math.ceil(keywords.length / perPage)
-  const paginatedKeywords = keywords.slice((page - 1) * perPage, page * perPage)
+  const totalPages = Math.ceil(filteredKeywords.length / perPage)
+  const paginatedKeywords = filteredKeywords.slice((page - 1) * perPage, page * perPage)
 
   return (
     <SidebarLayout>
@@ -173,12 +195,35 @@ export default function KeywordManager() {
             <h2 className="text-xl font-bold text-black dark:text-white">Quản lý từ khoá crawl</h2>
           </div>
 
-          {/* Table keyword */}
+          <div className="w-full p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex gap-2 w-full">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="Nhập từ khoá để tìm..."
+                className="border px-3 py-2 rounded flex-1"
+              />
+              <button
+                onClick={handleSearch}
+                className="px-6 py-2 bg-black text-white rounded hover:bg-blue-700"
+              >
+                Tìm kiếm
+              </button>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                  <th className="px-4 py-3 text-center">Chọn</th>
+                  <th className="px-4 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-4 py-3">STT</th>
                   <th className="px-4 py-3">Từ khoá</th>
                   <th className="px-4 py-3 text-center">Hành động</th>
@@ -225,7 +270,21 @@ export default function KeywordManager() {
               </tbody>
             </table>
           </div>
-
+          <div className="p-4 flex justify-between">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-black text-white px-6 py-2 rounded hover:bg-blue-700"
+            >
+              Thêm từ khoá
+            </button>
+            <button
+              onClick={deleteSelected}
+              disabled={selectedIds.length === 0}
+              className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              Xoá đã chọn
+            </button>
+          </div>
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 dark:text-gray-300">Hiển thị</span>
@@ -282,23 +341,6 @@ export default function KeywordManager() {
             </div>
           </div>
 
-          <div className="p-4 flex justify-between">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-black text-white px-6 py-2 rounded hover:bg-blue-700"
-            >
-              Thêm từ khoá
-            </button>
-            <button
-              onClick={deleteSelected}
-              disabled={selectedIds.length === 0}
-              className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 disabled:opacity-50"
-            >
-              Xoá đã chọn
-            </button>
-          </div>
-
-          {/* Form chỉnh scheduler */}
           <div className="p-4">
             <h3 className="text-lg font-bold mb-3 text-black dark:text-white">
               Cài đặt thời gian chạy tự động
@@ -330,7 +372,6 @@ export default function KeywordManager() {
             </div>
           </div>
 
-          {/* Nút crawl */}
           <div className="p-4 flex justify-end">
             <button
               onClick={handleCrawl}
@@ -342,7 +383,6 @@ export default function KeywordManager() {
           </div>
         </div>
 
-        {/* Modal sửa keyword */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
@@ -371,7 +411,6 @@ export default function KeywordManager() {
           </div>
         )}
 
-        {/* Modal thêm keyword */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">

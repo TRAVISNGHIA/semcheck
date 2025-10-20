@@ -23,7 +23,6 @@ export default function SidebarLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <aside
         className={`${
           collapsed ? 'w-20' : 'w-64'

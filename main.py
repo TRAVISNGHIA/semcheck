@@ -29,7 +29,6 @@ app.include_router(profile_router, prefix="/api/profiles", tags=["Profiles"])
 app.include_router(keyword_router, prefix="/api/keywords", tags=["Keywords"])
 app.include_router(scheduler_router, prefix="/api/scheduler", tags=["Scheduler"])
 
-# Endpoint trigger crawl thủ công
 @app.post("/api/crawl")
 def trigger_crawl():
     crawl_ads()

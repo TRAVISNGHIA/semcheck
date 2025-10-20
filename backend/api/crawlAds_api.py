@@ -47,7 +47,6 @@ uas_mobile = load_uas(UA_MOBILE_FILE)
 uas_tablet = load_uas(UA_TABLET_FILE)
 uas_laptop = load_uas(UA_LAPTOP_FILE)
 
-
 def choose_user_agent_and_window(profile: dict, keyword: str = None):
     if profile.get("user_agent"):
         user_agent = profile["user_agent"]
@@ -81,7 +80,6 @@ def choose_user_agent_and_window(profile: dict, keyword: str = None):
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
     return user_agent, window
 
-
 def upload_to_r2(local_path: str, remote_path: str) -> bool:
     s3 = boto3.client(
         "s3",
@@ -98,7 +96,6 @@ def upload_to_r2(local_path: str, remote_path: str) -> bool:
         print(f"[Upload Error] {e}")
         return False
 
-
 profile_index = 0
 def choose_next_profile():
     global profile_index
@@ -112,7 +109,6 @@ def choose_next_profile():
     profile = valid_profiles[profile_index % len(valid_profiles)]
     profile_index += 1
     return profile
-
 
 def get_proxy_from_api():
     url = API_PROXY_URL
@@ -205,7 +201,7 @@ def crawl_ads():
         }
 
     user_agent, window = choose_user_agent_and_window(profile)
-    print(f"[DEBUG] user_agent={user_agent}, window={window}, proxy={proxy_host}:{proxy_port}")
+    print(f"user_agent={user_agent}, window={window}, proxy={proxy_host}:{proxy_port}")
 
     options = uc.ChromeOptions()
     options.add_argument(f"--user-data-dir={profile['user_data_dir']}")
@@ -214,7 +210,7 @@ def crawl_ads():
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--headless-new")
+    options.add_argument("--headless=chrome")
 
     driver = uc.Chrome(
         version_main=120,
@@ -240,7 +236,7 @@ def crawl_ads():
 
     for kw in keywords:
         keyword = kw["keyword"]
-        for page in range(3):  # crawl 3 trang đầu
+        for page in range(3):
             try:
                 delay = random.uniform(3, 5)
                 time.sleep(delay)

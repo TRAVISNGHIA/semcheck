@@ -1,16 +1,28 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import schedule, threading, time
+import schedule, threading, time, json, os
 from datetime import datetime
 from backend.api.crawlAds_api import crawl_ads
 
 router = APIRouter()
+CONFIG_FILE = "scheduler_config.json"
 
 class SchedulerConfig(BaseModel):
     interval: int
     unit: str
 
-scheduler_config = SchedulerConfig(interval=3, unit="minutes")
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f:
+            data = json.load(f)
+            return SchedulerConfig(**data)
+    return SchedulerConfig(interval=3, unit="minutes")
+
+def save_config(config: SchedulerConfig):
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(config.dict(), f, indent=2)
+
+scheduler_config = load_config()
 
 def crawl_job():
     start_time = datetime.now()
@@ -30,11 +42,10 @@ def schedule_job():
         schedule.every(scheduler_config.interval).hours.do(crawl_job).tag("crawl_job")
     elif scheduler_config.unit == "seconds":
         schedule.every(scheduler_config.interval).seconds.do(crawl_job).tag("crawl_job")
+    print(f"[Scheduler] Đã thiết lập lại: {scheduler_config.interval} {scheduler_config.unit}")
 
-# khởi tạo job default
 schedule_job()
 
-# chạy schedule loop trong thread riêng
 def run_scheduler():
     while True:
         schedule.run_pending()
@@ -53,6 +64,8 @@ def update_scheduler_config(config: SchedulerConfig):
 
     scheduler_config.interval = config.interval
     scheduler_config.unit = config.unit
+
+    save_config(scheduler_config)
     schedule_job()
 
     return {"message": "Cập nhật thành công", "config": scheduler_config.dict()}
