@@ -12,14 +12,15 @@ export default function KeywordManager() {
   const [editedKeyword, setEditedKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(20)
-  const [interval, setInterval] = useState(5)
-  const [unit, setUnit] = useState<'seconds' | 'minutes' | 'hours'>('minutes')
-  const [saving, setSaving] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [selectAll, setSelectAll] = useState(false)
-
+  const [crawlMessage, setCrawlMessage] = useState<string | null>(null)
+  const [isCrawling, setIsCrawling] = useState(false)
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+  const [crawlStartTime, setCrawlStartTime] = useState<Date | null>(null)
+  const [crawlEndTime, setCrawlEndTime] = useState<Date | null>(null)
   const toggleSelectAll = () => {
     if (selectAll) {
       setSelectedIds([])
@@ -29,41 +30,67 @@ export default function KeywordManager() {
     setSelectAll(!selectAll)
   }
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
-
   useEffect(() => {
     fetchKeywords()
-    fetchSchedulerConfig()
   }, [])
 
-  const fetchKeywords = async () => {
-    const res = await fetch(`${API_BASE_URL}/api/keywords`)
-    const data = await res.json()
-    const mapped = data.map((kw: any) => ({
-      ...kw,
-      _id: kw._id.$oid || kw._id,
-    }))
-    setKeywords(mapped)
-    setFilteredKeywords(mapped)
-    setSelectedIds([])
-  }
+  useEffect(() => {
+    let mounted = true
+    const poll = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/crawl_status`)
+        const data = await res.json()
+        if (!mounted) return
 
-  const fetchSchedulerConfig = async () => {
+        if (data.status === 'running') {
+          setIsCrawling(true)
+          setCrawlMessage('')
+        } else if (data.status === 'done') {
+          if (isCrawling) {
+            setIsCrawling(false)
+            setCrawlEndTime(new Date())
+            setCrawlMessage('')
+          }
+        } else {
+          setIsCrawling(false)
+        }
+      } catch (err) {
+        console.error('crawl status error', err)
+      }
+    }
+
+    poll()
+    const id = setInterval(poll, 3000)
+    return () => {
+      mounted = false
+      clearInterval(id)
+    }
+  }, [API_BASE_URL, isCrawling])
+
+
+
+  const fetchKeywords = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/scheduler/config`)
+      const res = await fetch(`${API_BASE_URL}/api/keywords/`)
       const data = await res.json()
-      if (data.interval) setInterval(data.interval)
-      if (data.unit) setUnit(data.unit)
-    } catch (error) {
-      console.error('Lỗi khi load config scheduler:', error)
+      const mapped = data.map((kw: any) => ({
+        ...kw,
+        _id: kw._id?.$oid || kw._id,
+      }))
+      setKeywords(mapped)
+      setFilteredKeywords(mapped)
+      setSelectedIds([])
+    } catch (e) {
+      console.error('Lỗi khi load keywords:', e)
     }
   }
+
   const removeVietnameseTones = (str: string) => {
     return str
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/g, "d")
-      .replace(/Đ/g, "D")
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
   }
 
   const handleSearch = () => {
@@ -84,6 +111,7 @@ export default function KeywordManager() {
     setSearchTerm('')
     setFilteredKeywords(keywords)
   }
+
   const addKeyword = async () => {
     if (!newKeyword.trim()) return
     const list = newKeyword
@@ -157,44 +185,46 @@ export default function KeywordManager() {
     fetchKeywords()
   }
 
-  const handleCrawl = async () => {
-    setLoading(true)
-    await fetch(`${API_BASE_URL}/api/crawl`, { method: 'POST' })
-    setLoading(false)
-    alert('Tra cứu đã xong')
-  }
+const handleCrawl = async () => {
+  setLoading(true)
+  const now = new Date()
+  setCrawlStartTime(now)
+  setCrawlEndTime(null)
+  setCrawlMessage(null)
 
-  const saveSchedulerConfig = async () => {
-    setSaving(true)
-    try {
-      await fetch(`${API_BASE_URL}/api/scheduler/config`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          interval,
-          unit,
-        }),
-      })
-      alert('Đã lưu cấu hình thời gian!')
-    } catch (error) {
-      console.error('Lỗi khi lưu interval:', error)
-      alert('Lưu thất bại, check console.')
-    } finally {
-      setSaving(false)
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/crawl`, { method: 'POST' })
+    if (res.status === 202) {
+      setCrawlMessage('Tiến trình đã bắt đầu')
+      setIsCrawling(true)
+    } else if (res.status === 409) {
+      const j = await res.json().catch(() => ({ error: 'Conflict' }))
+      setCrawlMessage('Không thể bắt đầu: ' + (j.error || 'Đang có tiến trình khác'))
+    } else {
+      const text = await res.text()
+      setCrawlMessage('Lỗi server: ' + text)
     }
+  } catch (err) {
+    console.error(err)
+    setCrawlMessage('Lỗi mạng.')
+  } finally {
+    setLoading(false)
   }
+}
 
-  const totalPages = Math.ceil(filteredKeywords.length / perPage)
+  const totalPages = Math.max(1, Math.ceil(filteredKeywords.length / perPage))
   const paginatedKeywords = filteredKeywords.slice((page - 1) * perPage, page * perPage)
 
   return (
     <SidebarLayout>
       <section className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
-        <div className="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
+                  <div className="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
+          {/* HEADER */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <h2 className="text-xl font-bold text-black dark:text-white">Quản lý từ khoá crawl</h2>
           </div>
 
+          {/* SEARCH */}
           <div className="w-full p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex gap-2 w-full">
               <input
@@ -213,16 +243,13 @@ export default function KeywordManager() {
               </button>
             </div>
           </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={toggleSelectAll}
-                    />
+                    <input type="checkbox" checked={selectAll} onChange={toggleSelectAll} />
                   </th>
                   <th className="px-4 py-3">STT</th>
                   <th className="px-4 py-3">Từ khoá</th>
@@ -246,9 +273,7 @@ export default function KeywordManager() {
                           onChange={() => toggleSelect(kw._id)}
                         />
                       </td>
-                      <td className="px-4 py-2 text-black">
-                        {(page - 1) * perPage + index + 1}
-                      </td>
+                      <td className="px-4 py-2 text-black">{(page - 1) * perPage + index + 1}</td>
                       <td className="px-4 py-2 text-black">{kw.keyword}</td>
                       <td className="px-4 py-2 text-center space-x-2">
                         <button
@@ -270,6 +295,7 @@ export default function KeywordManager() {
               </tbody>
             </table>
           </div>
+
           <div className="p-4 flex justify-between">
             <button
               onClick={() => setShowAddModal(true)}
@@ -285,7 +311,8 @@ export default function KeywordManager() {
               Xoá đã chọn
             </button>
           </div>
-          <div className="flex items-center justify-between p-4">
+
+          <div className="p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 dark:text-gray-300">Hiển thị</span>
               <select
@@ -312,25 +339,26 @@ export default function KeywordManager() {
                   for (let i = 1; i <= totalPages; i++) pages.push(i)
                 } else {
                   pages.push(1)
-                  if (page > 3) pages.push("...")
+                  if (page > 3) pages.push('...')
                   const start = Math.max(2, page - 1)
                   const end = Math.min(totalPages - 1, page + 1)
                   for (let i = start; i <= end; i++) pages.push(i)
-                  if (page < totalPages - 2) pages.push("...")
+                  if (page < totalPages - 2) pages.push('...')
                   pages.push(totalPages)
                 }
-
                 return pages.map((p, idx) =>
-                  p === "..." ? (
-                    <span key={`ellipsis-${idx}`} className="px-2">...</span>
+                  p === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2">
+                      ...
+                    </span>
                   ) : (
                     <button
                       key={`page-${p}`}
                       onClick={() => setPage(p as number)}
                       className={`px-3 py-1 rounded ${
                         page === p
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       {p}
@@ -341,45 +369,29 @@ export default function KeywordManager() {
             </div>
           </div>
 
-          <div className="p-4">
-            <h3 className="text-lg font-bold mb-3 text-black dark:text-white">
-              Cài đặt thời gian chạy tự động
-            </h3>
-            <div className="flex flex-col md:flex-row gap-3 items-center">
-              <input
-                type="number"
-                min={1}
-                value={interval}
-                onChange={(e) => setInterval(Number(e.target.value))}
-                className="p-2 border rounded w-24"
-              />
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value as 'seconds' | 'minutes' | 'hours')}
-                className="p-2 border rounded"
-              >
-                <option value="seconds">Giây</option>
-                <option value="minutes">Phút</option>
-                <option value="hours">Giờ</option>
-              </select>
-              <button
-                onClick={saveSchedulerConfig}
-                disabled={saving}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                {saving ? 'Đang lưu...' : 'Lưu'}
-              </button>
-            </div>
-          </div>
-
-          <div className="p-4 flex justify-end">
+          <div className="p-4 flex flex-col items-end">
             <button
               onClick={handleCrawl}
-              disabled={loading}
-              className="bg-black text-white px-6 py-2 rounded hover:bg-blue-700"
+              className="bg-black text-white px-6 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
             >
-              {loading ? 'Đang crawl...' : 'Bắt đầu tra cứu'}
+              Bắt đầu tra cứu
             </button>
+
+            {crawlMessage && (
+              <div
+                className={`text-sm mt-2 ${
+                  isCrawling ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                }`}
+              >
+                {crawlMessage}
+                {crawlStartTime && (
+                  <span> | Bắt đầu: {crawlStartTime.toLocaleTimeString()}</span>
+                )}
+                {crawlEndTime && (
+                  <span> | Kết thúc: {crawlEndTime.toLocaleTimeString()}</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

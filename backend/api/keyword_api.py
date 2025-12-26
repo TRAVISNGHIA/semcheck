@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from bson import ObjectId
-from backend.models.mongo_client import get_mongo_client
+from models.mongo_client import get_mongo_client
 
 router = APIRouter()
 client = get_mongo_client()

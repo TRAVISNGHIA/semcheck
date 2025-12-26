@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from bson import ObjectId
 import os
 
-from backend.models.mongo_client import get_mongo_client
+from models.mongo_client import get_mongo_client
 
 router = APIRouter()
 client = get_mongo_client()

@@ -1,4 +1,4 @@
-from backend.models.mongo_client import get_mongo_client
+from models.mongo_client import get_mongo_client
 from bson import ObjectId
 
 client = get_mongo_client()

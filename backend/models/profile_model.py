@@ -1,11 +1,11 @@
-from backend.models.mongo_client import get_mongo_client
+from models.mongo_client import get_mongo_client
 from datetime import datetime
 
 client = get_mongo_client()
 db = client["test"]
 profiles_collection = db["profiles"]
 
-def save_profile_to_db(profile_name, user_data_dir, profile_directory, user_agent, viewport=None):
+def save_profile_to_db(profile_name, user_data_dir, profile_directory):
 
     existing = profiles_collection.find_one({"profile_name": profile_name})
     if existing:
@@ -16,7 +16,6 @@ def save_profile_to_db(profile_name, user_data_dir, profile_directory, user_agen
         "profile_name": profile_name,
         "user_data_dir": user_data_dir,
         "profile_directory": profile_directory,
-        "viewport": viewport,
         "created_at": datetime.now()
     })
     print(f"✅ Đã lưu profile '{profile_name}' vào MongoDB.")

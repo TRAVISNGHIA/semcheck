@@ -1,4 +1,4 @@
-from backend.models.mongo_client import get_mongo_client
+from mongo_client import get_mongo_client
 
 client = get_mongo_client()
 db = client["test"]

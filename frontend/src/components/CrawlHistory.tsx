@@ -43,7 +43,6 @@ export default function CrawlHistory() {
   const [translate, setTranslate] = useState({ x: 0, y: 0 })
   const [viewMode, setViewMode] = useState<'table' | 'chart'>('table')
 
-  // đa lựa chọn
   const [selectedDomains, setSelectedDomains] = useState<string[]>([])
   const [selectedProfiles, setSelectedProfiles] = useState<string[]>([])
   const [domainHistory, setDomainHistory] = useState<string[][]>([])
@@ -115,7 +114,7 @@ export default function CrawlHistory() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/ads`)
+        const res = await fetch(`${API_BASE_URL}/api/ads/`)
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
         const data = await res.json()
         if (!Array.isArray(data)) throw new Error('Data is not an array')
@@ -233,7 +232,10 @@ export default function CrawlHistory() {
                 isMulti
                 options={availableProfiles.map((p) => ({ value: p, label: p }))}
                 value={selectedProfiles.map((p) => ({ value: p, label: p }))}
-                onChange={(selected) => setSelectedProfiles(selected.map((s) => s.value))}
+                onChange={(selected) => {
+                  const values = (selected as { value: string; label: string }[] | null)?.map((s) => s.value) ?? []
+                  setSelectedProfiles(values)
+                }}
                 placeholder="Chọn profile..."
                 className="text-black"
                 styles={{
@@ -277,7 +279,10 @@ export default function CrawlHistory() {
                 isMulti
                 options={availableDomains.map((d) => ({ value: d, label: d }))}
                 value={selectedDomains.map((d) => ({ value: d, label: d }))}
-                onChange={(selected) => setSelectedDomains(selected.map((s) => s.value))}
+                onChange={(selected) => {
+                  const values = (selected as { value: string; label: string }[] | null)?.map((s) => s.value) ?? []
+                  setSelectedDomains(values)
+                }}
                 placeholder="Chọn domain..."
                 className="text-black"
                 styles={{

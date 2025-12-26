@@ -1,26 +1,21 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from bson import ObjectId
-from backend.models.mongo_client import get_mongo_client
+from models.mongo_client import get_mongo_client
 
 router = APIRouter()
 client = get_mongo_client()
 db = client["test"]
 profile_collection = db["profiles"]
 
-
 class ProfileRequest(BaseModel):
     name: str
     user_data_dir: str
     profile_directory: str
-    user_agent: str
-    viewport: dict = {}
-
 
 class UpdateProfileRequest(BaseModel):
     profile_id: str
     updated_data: dict
-
 
 class DeleteProfileRequest(BaseModel):
     profile_id: str
@@ -40,7 +35,6 @@ def create_profile(data: ProfileRequest):
     profile_collection.insert_one(data.dict())
     return {"message": "Đã thêm profiles thành công", "name": data.name}
 
-
 @router.put("/update")
 def update_profile(data: UpdateProfileRequest):
     try:
@@ -48,7 +42,6 @@ def update_profile(data: UpdateProfileRequest):
         new_data = data.updated_data
 
         if "name" in new_data:
-            # check duplicate name
             existing = profile_collection.find_one({"name": new_data["name"]})
             if existing and str(existing["_id"]) != profile_id:
                 raise HTTPException(status_code=409, detail="Tên profiles đã tồn tại")
@@ -65,7 +58,6 @@ def update_profile(data: UpdateProfileRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.delete("/delete")
 def delete_profile(profile_id: str = Query(...)):
